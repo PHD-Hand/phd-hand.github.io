@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>PHD-Hand: Printable Humanoid Dexterous Hand</title>
+<meta name="description" content="PHD-Hand is an open-source, fully linkage-driven humanoid hand with three actuated DOFs per digit, printable on a budget 3D printer. CAD, print settings, control GUI, and build guide.">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✋</text></svg>">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Archivo:wdth,wght@62..125,400..800&display=swap" rel="stylesheet">
+<!--
+  When the GitHub repo is public: turn the "GitHub · coming soon" items
+  (nav, Files table, maintainer line, footer) into links.
+-->
+<style>
+:root {
+  --bg: #eceff1;
+  --surface: #f7f8f9;
+  --ink: #17212b;
+  --muted: #56636f;
+  --line: #c9d0d6;
+  --bronze: #a87a2e;      /* textured PEI build-plate bronze */
+  --bronze-soft: #e7d8bc;
+  --link: #7a5516;
+  color-scheme: light;
+  --wide: "wdth" 118;
+  --narrow: "wdth" 72;
+}
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #121820;
+    --surface: #19212b;
+    --ink: #e6eaee;
+    --muted: #9aa6b1;
+    --line: #2c3946;
+    --bronze: #d1a456;
+    --bronze-soft: #3a3020;
+    --link: #e2b86a;
+    color-scheme: dark;
+  }
+}
+*, *::before, *::after { box-sizing: border-box; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Archivo", "Helvetica Neue", Arial, sans-serif;
+  font-size: 1.0625rem;
+  line-height: 1.6;
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+a { color: var(--link); text-underline-offset: 3px; }
+a:focus-visible, button:focus-visible, input:focus-visible {
+  outline: 2px solid var(--bronze); outline-offset: 3px;
+}
+img, video { max-width: 100%; display: block; }
+.wrap { max-width: 1120px; margin: 0 auto; padding: 0 24px; }
+
+/* Header */
+header.top {
+  position: sticky; top: 0; z-index: 10;
+  background: var(--bg);
+  border-bottom: 1px solid var(--line);
+  padding-top: env(safe-area-inset-top, 0px);
+}
+header.top .wrap { display: flex; align-items: center; justify-content: space-between; gap: 16px; height: 56px; }
+.wordmark { font-weight: 800; font-variation-settings: var(--wide); font-size: 1.15rem; letter-spacing: -0.01em; text-decoration: none; color: var(--ink); }
+nav.links { display: flex; gap: 22px; font-size: 0.95rem; overflow-x: auto; }
+nav.links a { color: var(--muted); text-decoration: none; white-space: nowrap; }
+nav.links a:hover { color: var(--ink); }
+nav.links .soon { color: var(--muted); opacity: 0.7; white-space: nowrap; }
+
+/* Hero */
+.hero { padding: 48px 0 48px; }
+.hero .wrap { display: grid; grid-template-columns: 1.05fr 1fr; gap: 48px; align-items: center; }
+.hero h1 {
+  margin: 0;
+  font-size: clamp(3.4rem, 9vw, 6.6rem);
+  line-height: 0.92;
+  font-weight: 800;
+  font-variation-settings: var(--wide);
+  letter-spacing: -0.035em;
+}
+.expansion {
+  margin: 18px 0 0;
+  font-size: clamp(1.05rem, 2vw, 1.3rem);
+  font-variation-settings: var(--narrow);
+  font-weight: 500;
+  color: var(--muted);
+}
+.expansion b { color: var(--bronze); font-weight: 700; }
+.lede { max-width: 34em; margin: 22px 0 28px; font-size: 1.12rem; }
+.actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.btn {
+  display: inline-block; padding: 12px 20px; border-radius: 4px;
+  font-weight: 600; text-decoration: none; font-size: 0.98rem;
+  border: 1.5px solid var(--ink); color: var(--ink);
+}
+.btn.primary { background: var(--ink); color: var(--bg); }
+.btn:hover { border-color: var(--bronze); }
+.btn.primary:hover { background: var(--bronze); border-color: var(--bronze); color: #fff; }
+
+button.btn { font: inherit; font-weight: 600; font-size: 0.98rem; cursor: pointer; background: transparent; }
+button.btn.primary { background: var(--ink); color: var(--bg); }
+.release { margin: 18px 0 0; display: inline-flex; align-items: center; gap: 10px; font-size: 0.95rem; color: var(--muted); }
+.release .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--bronze); box-shadow: 0 0 0 4px var(--bronze-soft); }
+
+/* Video overlay */
+dialog#videoDialog { border: none; padding: 0; background: transparent; max-width: min(92vw, 520px); width: 100%; overflow: visible; }
+dialog#videoDialog.wide { max-width: min(92vw, 1100px); }
+dialog#videoDialog::backdrop { background: rgba(10, 14, 20, 0.78); }
+.dlg-frame { background: #000; border-radius: 8px; overflow: hidden; aspect-ratio: 16 / 9; max-height: 80vh; margin: 0 auto; }
+.dlg-frame.li { background: #fff; aspect-ratio: 504 / 541; }
+.dlg-frame iframe { width: 100%; height: 100%; border: 0; display: block; }
+.dlg-frame video { width: 100%; height: 100%; display: block; background: #000; }
+.dlg-alt { margin: 10px 0 0; text-align: right; font-size: 0.88rem; color: #c9d0d6; }
+.dlg-alt a, .dlg-alt button { color: #e2b86a; }
+.dlg-alt button { font: inherit; background: none; border: none; padding: 0; text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
+.dlg-close {
+  position: absolute; top: -44px; right: 0; width: 36px; height: 36px; border-radius: 50%;
+  border: none; background: rgba(255,255,255,0.15); color: #fff; font-size: 1.6rem; line-height: 1; cursor: pointer;
+}
+.dlg-close:hover { background: rgba(255,255,255,0.28); }
+
+/* Hero video */
+.hero-video { margin: 0; display: flex; flex-direction: column; align-items: center; }
+.hero-video video { width: 100%; max-width: 460px; aspect-ratio: 522 / 588; object-fit: contain; background: transparent; }
+.hero-video figcaption { margin-top: 6px; font-size: 0.9rem; color: var(--muted); }
+
+/* Sections */
+section.block { padding: 64px 0; border-top: 1px solid var(--line); }
+section.block h2 {
+  margin: 0 0 8px;
+  font-size: clamp(1.8rem, 3.6vw, 2.5rem);
+  font-weight: 750;
+  font-variation-settings: var(--wide);
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+}
+.sub { margin: 0 0 32px; color: var(--muted); max-width: 40em; }
+
+/* Specs */
+.specs { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 0; border-top: 2px solid var(--ink); }
+.spec { padding: 18px 20px 20px 0; border-bottom: 1px solid var(--line); }
+.spec dt { font-size: 0.9rem; color: var(--muted); }
+.spec dd { margin: 4px 0 0; font-size: 1.35rem; font-weight: 650; font-variation-settings: var(--narrow); line-height: 1.25; }
+.fill { color: var(--muted); border-bottom: 1.5px dashed var(--bronze); font-weight: 500; }
+
+/* Figures */
+.fig { margin: 0; }
+.fig .plate { background: #fff; border: 1px solid var(--line); border-radius: 6px; overflow: hidden; }
+.fig img { width: 100%; height: auto; }
+.fig .plate.clear { background: transparent; border: none; border-radius: 0; }
+@media (prefers-color-scheme: dark) {
+  /* figures with black labels need a light backing to stay readable */
+  .fig .plate.clear.ink { background: #e6e9ec; border-radius: 6px; padding: 10px; }
+}
+.fig figcaption { margin-top: 8px; font-size: 0.92rem; color: var(--muted); max-width: 46em; }
+.gallery { display: grid; grid-template-columns: 1.7fr 1fr; gap: 24px; align-items: start; }
+.gallery .wide { grid-column: 1 / -1; }
+
+/* Flexure */
+.split { display: grid; grid-template-columns: 1.1fr 1fr; gap: 48px; align-items: start; }
+.prose p { margin: 0 0 16px; max-width: 38em; }
+.prose p:last-child { margin-bottom: 0; }
+.settings { display: grid; grid-template-columns: 1fr 1.1fr; gap: 40px; align-items: center; margin-top: 48px; }
+.settings h3, .compare-h { margin: 0 0 14px; font-size: 1.25rem; }
+table.kv { width: 100%; border-collapse: collapse; }
+table.kv th, table.kv td { text-align: left; padding: 10px 12px 10px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.kv th { font-weight: 500; color: var(--muted); width: 45%; }
+table.kv td { font-weight: 650; }
+.callout { margin-top: 24px; padding: 16px 18px; border-left: 3px solid var(--bronze); background: var(--surface); border-radius: 0 6px 6px 0; font-size: 0.97rem; }
+
+/* Comparison */
+table.compare { width: 100%; border-collapse: collapse; min-width: 640px; }
+table.compare th, table.compare td { text-align: left; padding: 14px 16px 14px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.compare thead th { font-size: 0.9rem; color: var(--muted); font-weight: 600; border-bottom: 2px solid var(--ink); }
+table.compare tbody th { font-weight: 500; color: var(--muted); width: 22%; }
+table.compare td.us { font-weight: 700; color: var(--ink); }
+
+/* Control */
+.control-list { margin: 0 0 16px; padding-left: 1.1em; }
+.control-list li { margin-bottom: 8px; }
+
+.paper-next { margin-top: 48px; padding-top: 40px; border-top: 1px solid var(--line); }
+/* Authors */
+.authors { margin: 0 0 6px; }
+.affil { margin: 0 0 4px; font-size: 0.92rem; color: var(--muted); }
+.prior { margin-top: 20px; font-size: 0.95rem; color: var(--muted); }
+
+/* Downloads */
+.table-scroll { overflow-x: auto; }
+table.files { width: 100%; border-collapse: collapse; min-width: 560px; }
+table.files th { text-align: left; font-weight: 600; font-size: 0.9rem; color: var(--muted); padding: 0 16px 10px 0; border-bottom: 2px solid var(--ink); }
+table.files td { padding: 16px 16px 16px 0; border-bottom: 1px solid var(--line); vertical-align: top; }
+table.files td:first-child { font-weight: 650; }
+table.files .desc { color: var(--muted); font-size: 0.95rem; max-width: 32em; }
+.status { display: inline-block; font-size: 0.82rem; padding: 2px 9px; border-radius: 99px; background: var(--bronze-soft); color: var(--ink); white-space: nowrap; }
+
+/* Build steps */
+ol.steps { list-style: none; counter-reset: s; padding: 0; margin: 0; display: grid; gap: 0; }
+ol.steps li { counter-increment: s; display: grid; grid-template-columns: 4.2rem 1fr; gap: 16px; padding: 20px 0; border-bottom: 1px solid var(--line); }
+ol.steps li::before {
+  content: counter(s);
+  font-size: 2.4rem; font-weight: 800; font-variation-settings: var(--wide);
+  line-height: 1; color: var(--bronze);
+}
+ol.steps h3 { margin: 0 0 4px; font-size: 1.15rem; }
+ol.steps p { margin: 0; color: var(--muted); max-width: 44em; }
+
+/* Paper */
+.paper { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; }
+.paper .venue { font-size: 0.95rem; color: var(--bronze); font-weight: 600; margin: 0 0 6px; }
+.paper h3 { margin: 0 0 12px; font-size: 1.4rem; line-height: 1.3; font-variation-settings: var(--narrow); font-weight: 700; }
+.bib { position: relative; }
+.bib pre {
+  margin: 0; padding: 18px; padding-top: 44px; border-radius: 6px;
+  background: var(--surface); border: 1px solid var(--line);
+  font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; font-size: 0.82rem;
+  line-height: 1.5; overflow-x: auto; white-space: pre;
+}
+.bib button {
+  position: absolute; top: 10px; right: 10px;
+  font: inherit; font-size: 0.85rem; padding: 4px 12px; cursor: pointer;
+  background: var(--bg); color: var(--ink); border: 1px solid var(--line); border-radius: 4px;
+}
+
+/* Maintainer */
+.maintainer { padding: 40px 0; }
+.maintainer p { margin: 0; font-size: 1.15rem; }
+.maintainer .sub { margin: 6px 0 0; font-size: 1rem; }
+
+footer { border-top: 1px solid var(--line); padding: 32px 0 48px; color: var(--muted); font-size: 0.9rem; }
+footer .wrap { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 12px; }
+
+@media (max-width: 860px) {
+  .hero .wrap, .paper, .split, .settings, .gallery { grid-template-columns: 1fr; }
+  nav.links { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header class="top">
+  <div class="wrap">
+    <a class="wordmark" href="#">PHD-Hand</a>
+    <nav class="links" aria-label="Sections">
+      <a href="#specs">Specs</a>
+      <a href="#flexure">Flexure</a>
+      <a href="#media">Media</a>
+      <a href="#control">Control</a>
+      <a href="#files">Files</a>
+      <a href="#build">Build</a>
+      <a href="#paper">Paper</a>
+      <span class="soon">GitHub · coming soon</span>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <div>
+        <h1>PHD&#8209;Hand</h1>
+        <p class="expansion"><b>P</b>rintable <b>H</b>umanoid <b>D</b>exterous Hand</p>
+        <p class="lede">A dexterous humanoid hand with three actuated degrees of freedom in every digit, driven entirely by linkages. A single 3D-printed flexure hinge at the root of each digit keeps the part count low enough to build on a budget 3D printer, at close to human size.</p>
+        <div class="actions">
+          <button type="button" class="btn primary" data-open-video>&#9654;&#xFE0E; Watch the video</button>
+          <a class="btn" href="https://arxiv.org/abs/2610.29030" target="_blank" rel="noopener">Read the paper</a>
+        </div>
+        <p class="release"><span class="dot" aria-hidden="true"></span>Open-source release coming soon</p>
+      </div>
+      <figure class="hero-video">
+        <!-- Transparent WebM for Chrome/Firefox/Edge; MP4 fallback (background flattened) for Safari -->
+        <video autoplay muted loop playsinline poster="media/cube-rotation-poster.webp" aria-label="PHD-Hand rotating a 55 mm cube in its palm">
+          <source src="media/cube-rotation.webm" type="video/webm">
+          <source src="media/cube-rotation.mp4" type="video/mp4">
+        </video>
+      </figure>
+    </div>
+  </section>
+
+  <section class="block" id="specs">
+    <div class="wrap">
+      <h2 style="margin-bottom:24px">Specifications</h2>
+      <dl class="specs">
+        <div class="spec"><dt>Digits</dt><dd>1 thumb + 4 fingers</dd></div>
+        <div class="spec"><dt>Actuated DOFs per digit</dt><dd>3: two at the root, one for the coupled upper joints</dd></div>
+        <div class="spec"><dt>Total actuated DOFs</dt><dd>15</dd></div>
+        <div class="spec"><dt>Drivetrain</dt><dd>Fully linkage-driven, no tendons or gear trains</dd></div>
+        <div class="spec"><dt>Root joint</dt><dd>2-DOF TPU flexure hinge</dd></div>
+        <div class="spec"><dt>Upper joint coupling</dt><dd>Cross 4-bar, ratio 0.77</dd></div>
+        <div class="spec"><dt>Hand length</dt><dd>About 200&nbsp;mm</dd></div>
+        <div class="spec"><dt>Major parts per digit</dt><dd>18</dd></div>
+        <div class="spec"><dt>Actuators</dt><dd>Generic mini RC servos, mounted off the digits</dd></div>
+        <div class="spec"><dt>Controller</dt><dd>Pololu Mini Maestro 18</dd></div>
+        <div class="spec"><dt>Backdrivable</dt><dd>Yes, every DOF in both directions</dd></div>
+        <div class="spec"><dt>Testing so far</dt><dd>About 200 hours on one prototype</dd></div>
+      </dl>
+    </div>
+  </section>
+
+  <section class="block" id="flexure">
+    <div class="wrap">
+      <h2>The flexure hinge</h2>
+      <p class="sub">The one part that makes a fully linkage-driven 3-DOF digit simple.</p>
+      <div class="split">
+        <div class="prose">
+          <p>The root of each digit is a single printed TPU part shaped like the strain relief on a cable connector. It tilts in two directions, for flexion and side-to-side motion, while resisting twist.</p>
+          <p>Because it bends gently instead of folding sharply, a 0.6&nbsp;mm spring steel rod can pass straight through its center to drive the upper two joints in both directions. Bending the hinge doesn't push or pull that rod, so the root joint and the upper joints are completely decoupled. Tilting the root never disturbs the finger's curl, and the reverse holds too.</p>
+          <p>Two RC servos tilt the root through two rigid drive rods and four ball joints, a layout that grew out of the classic planar 5-bar. A cross 4-bar couples the upper two joints at a ratio of 0.77, within the 0.75 to 0.8 range measured in human fingers. Its coupling rod runs outside the middle phalanx, so it can be shaped to add some passive compliance during contact.</p>
+          <div class="callout">The root joint's forward kinematics is close to linear: flexion follows the average of the two servo angles and side tilt follows their difference. An affine fit stays within 1.8° over most of the range and within 2.7° everywhere.</div>
+        </div>
+        <figure class="fig">
+          <div class="plate clear ink"><img src="media/digit-design.webp" alt="Diagram of one digit showing the flexure root joint, rigid drive rods, spring steel elastic drive rod, coupling rod, and flexible upper joints" loading="lazy"></div>
+          <figcaption>One digit: the 2-DOF flexure root joint, rigid drive rods, spring steel drive rod, and coupling rod.</figcaption>
+        </figure>
+      </div>
+
+      <div class="settings">
+        <figure class="fig">
+          <div class="plate"><img src="media/flexure-print.jpg" alt="Red TPU flexure hinge being 3D printed horizontally with a 0.4 mm nozzle" loading="lazy"></div>
+          <figcaption>The flexure prints flat, with no supports.</figcaption>
+        </figure>
+        <div>
+          <h3>Print settings for the flexure</h3>
+          <table class="kv">
+            <tbody>
+              <tr><th>Material</th><td>TPU 95A</td></tr>
+              <tr><th>Nozzle</th><td>0.4&nbsp;mm at 215&nbsp;°C</td></tr>
+              <tr><th>Bed</th><td>55&nbsp;°C, with an enclosure</td></tr>
+              <tr><th>Speed</th><td>100&nbsp;mm/s</td></tr>
+              <tr><th>Layer height</th><td>0.15&nbsp;mm</td></tr>
+              <tr><th>Infill</th><td>15%</td></tr>
+              <tr><th>Orientation</th><td>Horizontal, no supports</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <h3 class="compare-h" style="margin-top:56px">How it compares</h3>
+      <p class="sub" style="margin-bottom:20px">Against other hands that are fully linkage-driven, with at least three actuated DOFs per digit and all actuators off the digits.</p>
+      <div class="table-scroll">
+        <table class="compare">
+          <thead><tr><th></th><th>PHD-Hand</th><th>Kim et al. 2021 and follow-ups</th><th>Linkerbot L20 (commercial)</th></tr></thead>
+          <tbody>
+            <tr><th>Major parts per digit</th><td class="us">18</td><td>27+</td><td>Unknown</td></tr>
+            <tr><th>Fabrication</th><td class="us">DIY on a budget 3D printer</td><td>Industrial</td><td>Industrial</td></tr>
+            <tr><th>Root and upper joint kinematics</th><td class="us">Completely decoupled</td><td>Partially coupled</td><td>Unknown</td></tr>
+            <tr><th>Backdrivable</th><td class="us">Yes</td><td>No</td><td>Unknown</td></tr>
+            <tr><th>Hand length</th><td class="us">About 200&nbsp;mm</td><td>218 to 255&nbsp;mm</td><td>About 225&nbsp;mm</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="media">
+    <div class="wrap">
+      <h2>What it can do</h2>
+      <p class="sub">Thumb opposition, the full GRASP taxonomy, and in-hand manipulation.</p>
+      <div class="gallery">
+        <figure class="fig wide">
+          <div class="plate clear ink"><img src="media/grasps.webp" alt="Grid of the hand performing all 33 grasp types of the GRASP taxonomy, grouped into power, intermediate, and precision grasps" loading="lazy"></div>
+          <figcaption>All 33 grasp types in the GRASP (Feix) taxonomy, using everyday and printed objects. Stick, light tool, and tripod variation aren't perfect yet, limited by finger flexion range and the missing web space between thumb and index finger.</figcaption>
+        </figure>
+        <figure class="fig wide">
+          <div class="plate clear"><img src="media/thumb-opposition.webp" alt="The thumb touching the tip of each finger in turn" loading="lazy"></div>
+          <figcaption>Thumb opposition: the thumb tip reaches each fingertip in turn.</figcaption>
+        </figure>
+      </div>
+      <div class="split" style="margin-top:48px">
+        <div class="prose">
+          <h3 class="compare-h">In-hand manipulation</h3>
+          <p><b>Relocate and flip.</b> The hand shifts a jar in its grip until the index finger can reach the lid, then flips it open. That takes the thumb and index finger coordinating with the other three digits, plus the index finger's full range and strength.</p>
+          <p><b>Precision screwdriver.</b> The thumb and middle finger alternate between retracting and spinning the driver without pushing it out of the index finger's hold.</p>
+          <p><b>Wrench worm screw.</b> The thumb rolls the worm screw outward to close the jaws. Tendon-driven hands that rely on springs to extend their digits can't do this, so it shows true bidirectional actuation.</p>
+        </div>
+        <figure class="fig" style="max-width:420px;justify-self:center">
+          <div class="plate"><img src="media/manipulation.jpg" alt="Sequences of the hand flipping open a lid, spinning a precision screwdriver, and thumbing the worm screw of a crescent wrench" loading="lazy"></div>
+          <figcaption>(a) relocate and flip, (b) screwdriver, (c) worm screw.</figcaption>
+        </figure>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="control">
+    <div class="wrap split">
+      <div class="prose">
+        <h2>Control from the browser</h2>
+        <p class="sub" style="margin-bottom:20px">A web GUI talks to the Mini Maestro directly. Nothing to install.</p>
+        <ul class="control-list">
+          <li>A 2-DOF pad per digit for jogging the root joint, plus a slider for the upper joints</li>
+          <li>Calibration for the zero, direction, and range of every DOF</li>
+          <li>Preset postures, and recording, saving, and replaying motions</li>
+        </ul>
+        <p>The GUI and the motion trajectories, including the cube rotation above, were generated with Claude from a plain-text description of the hand and refined against the real prototype.</p>
+      </div>
+      <figure class="fig">
+        <div class="plate clear ink"><img src="media/gui.webp" alt="Screenshot of the hand controller GUI with per-digit jog pads, calibration sliders, posture buttons, and record and playback controls" loading="lazy"></div>
+        <figcaption>The control GUI.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="block" id="files">
+    <div class="wrap">
+      <h2>Files</h2>
+      <p class="sub">Everything needed to print, wire, and run the hand, coming soon in the GitHub repo.</p>
+      <div class="table-scroll">
+        <table class="files">
+          <thead><tr><th>Package</th><th>What's inside</th><th>Format</th><th>Status</th></tr></thead>
+          <tbody>
+            <tr>
+              <td>CAD</td>
+              <td class="desc">Full hand assembly and editable models of every part, including the modular digits.</td>
+              <td>STEP, Fusion 360</td>
+              <td><span class="status">Coming soon</span></td>
+            </tr>
+            <tr>
+              <td>Print files</td>
+              <td class="desc">Print-ready parts with materials and settings: TPU 95A for the flexures and upper joints, PETG or TPU for the phalanges.</td>
+              <td>STL, 3MF</td>
+              <td><span class="status">Coming soon</span></td>
+            </tr>
+            <tr>
+              <td>Control GUI</td>
+              <td class="desc">Browser controller with jog pads, calibration, preset postures, and record and playback.</td>
+              <td>HTML, JS</td>
+              <td><span class="status">Coming soon</span></td>
+            </tr>
+            <tr>
+              <td>Motions</td>
+              <td class="desc">Saved postures and trajectories, including the in-hand cube rotation.</td>
+              <td>.prim</td>
+              <td><span class="status">Coming soon</span></td>
+            </tr>
+            <tr>
+              <td>Bill of materials</td>
+              <td class="desc">Mini RC servos, Pololu Mini Maestro 18, ball joints, rods, pins, fasteners, 0.6&nbsp;mm 304 spring steel wire, and filament.</td>
+              <td>CSV</td>
+              <td><span class="status">Coming soon</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="build">
+    <div class="wrap split">
+      <div>
+        <h2>Build it</h2>
+        <p class="sub">The full guide will come with the GitHub release. Here's the path from spool to working hand.</p>
+        <ol class="steps">
+          <li><div><h3>Print the parts</h3><p>Print the flexure hinges and upper-joint strips in TPU 95A with the settings above, and the phalanges in PETG, or in TPU to make each digit body one piece.</p></div></li>
+          <li><div><h3>Cut the drive rods</h3><p>Cut the elastic drive rods from 0.6&nbsp;mm 304 stainless spring steel wire, and shape the connectors with proper tooling, since a badly formed bend is the most likely place for a rod to break.</p></div></li>
+          <li><div><h3>Assemble the digits</h3><p>Each digit is a self-contained module with its three servos, so you can build, test, and swap them one at a time.</p></div></li>
+          <li><div><h3>Wire and calibrate</h3><p>Connect all 15 servos to the Mini Maestro using the channel map in the repo, then set each DOF's zero, direction, and range in the GUI.</p></div></li>
+          <li><div><h3>Run it</h3><p>Open the GUI in Chrome, connect to the Maestro, and try the preset postures or play back a recorded motion.</p></div></li>
+        </ol>
+      </div>
+      <figure class="fig" style="margin-top:8px">
+        <div class="plate clear"><img src="media/digit-module.webp" alt="A single modular digit with its servos, flexure root joint, and drive rods" loading="lazy"></div>
+        <figcaption>A complete digit module.</figcaption>
+      </figure>
+    </div>
+  </section>
+
+  <section class="block" id="paper">
+    <div class="wrap">
+      <h2>Papers</h2>
+      <p class="sub">Cite the Humanoids paper for the full hand.</p>
+    </div>
+    <div class="wrap paper">
+      <div>
+        <p class="venue">IEEE-RAS Humanoids 2026</p>
+        <h3>PHD-Hand: A Printable Humanoid Dexterous Hand with Linkage-Driven 3-DOA Digits</h3>
+        <p class="authors">Neel Adwani, Muhaiminul Islam Akash, Saffia Ouali, Ethan Liu, Cong Wang</p>
+        <p class="affil">New Jersey Institute of Technology</p>
+        <div class="actions" style="margin-top:20px">
+          <a class="btn primary" href="https://arxiv.org/pdf/2610.29030" target="_blank" rel="noopener">PDF</a>
+          <a class="btn" href="https://arxiv.org/abs/2610.29030" target="_blank" rel="noopener">arXiv</a>
+          <button type="button" class="btn" data-open-video>Video</button>
+        </div>
+      </div>
+      <div class="bib">
+        <button type="button" data-copy="bib-humanoids">Copy BibTeX</button>
+<pre id="bib-humanoids">@inproceedings{adwani2026phdhand,
+  title         = {{PHD-Hand}: A Printable Humanoid Dexterous
+                   Hand with Linkage-Driven 3-{DOA} Digits},
+  author        = {Adwani, Neel and Akash, Muhaiminul Islam
+                   and Ouali, Saffia and Liu, Ethan
+                   and Wang, Cong},
+  booktitle     = {IEEE-RAS International Conference on
+                   Humanoid Robots (Humanoids)},
+  year          = {2026},
+  eprint        = {2610.29030},
+  archivePrefix = {arXiv},
+  primaryClass  = {cs.RO}
+}</pre>
+      </div>
+    </div>
+
+    <div class="wrap paper paper-next">
+      <div>
+        <p class="venue">MECC 2026</p>
+        <h3>Dexterous Robot Hands with Linkage-Driven Three-DOF Fingers</h3>
+        <p class="authors">Neel Adwani, Saffia Ouali, Mateusz Orlowski, Ethan Liu, Cong Wang</p>
+        <p class="affil">Modeling, Estimation and Control Conference</p>
+        <p class="prior">The earlier paper that introduced the flexure root joint, with a preliminary three-digit prototype and strength tests.</p>
+      </div>
+      <div class="bib">
+        <button type="button" data-copy="bib-mecc">Copy BibTeX</button>
+<pre id="bib-mecc">@inproceedings{adwani2026dexterous,
+  title     = {Dexterous Robot Hands with Linkage-Driven
+               Three-{DOF} Fingers},
+  author    = {Adwani, Neel and Ouali, Saffia
+               and Orlowski, Mateusz and Liu, Ethan
+               and Wang, Cong},
+  booktitle = {Modeling, Estimation and Control
+               Conference (MECC)},
+  year      = {2026}
+}</pre>
+      </div>
+    </div>
+  </section>
+
+  <section class="block maintainer" id="maintainer">
+    <div class="wrap">
+      <p>Maintained by <a href="https://neeltron.com">Neel Adwani</a> &middot; <a href="https://www.linkedin.com/in/neeladwani">LinkedIn</a></p>
+      <p class="sub">GitHub repository coming soon.</p>
+    </div>
+  </section>
+</main>
+
+<dialog id="videoDialog" aria-label="PHD-Hand video">
+  <button type="button" class="dlg-close" aria-label="Close video">&times;</button>
+  <!-- LinkedIn embed (default). src is set when the dialog opens. -->
+  <div class="dlg-frame li" id="liFrameWrap">
+    <iframe id="liFrame" title="PHD-Hand video on LinkedIn" allowfullscreen></iframe>
+  </div>
+  <!-- Fallback: the same video hosted with the site -->
+  <div class="dlg-frame local" id="localWrap" hidden>
+    <video id="demoVideo" controls playsinline preload="none" poster="media/demo-video-poster.jpg">
+      <source src="media/demo-video.mp4" type="video/mp4">
+    </video>
+  </div>
+  <p class="dlg-alt" id="dlgAlt">Not loading? <button type="button" id="playLocal">Play it here</button> or <a href="https://lnkd.in/p/er-NRfMn" target="_blank" rel="noopener">open on LinkedIn</a></p>
+</dialog>
+
+<footer>
+  <div class="wrap">
+    <span>PHD-Hand &middot; IEEE-RAS Humanoids 2026</span>
+  </div>
+</footer>
+
+<script>
+const LINKEDIN_EMBED = 'https://www.linkedin.com/embed/feed/update/urn:li:ugcPost:7514419716610797568?collapsed=1';
+const dlg = document.getElementById('videoDialog');
+const liWrap = document.getElementById('liFrameWrap'), liFrame = document.getElementById('liFrame');
+const localWrap = document.getElementById('localWrap'), vid = document.getElementById('demoVideo');
+function showLinkedIn() {
+  localWrap.hidden = true; liWrap.hidden = false; dlg.classList.remove('wide');
+  document.getElementById('dlgAlt').hidden = false;
+  liFrame.src = LINKEDIN_EMBED;
+}
+document.querySelectorAll('[data-open-video]').forEach(b => b.addEventListener('click', () => {
+  showLinkedIn();
+  dlg.showModal();
+}));
+document.getElementById('playLocal').addEventListener('click', () => {
+  liFrame.src = 'about:blank'; liWrap.hidden = true;
+  localWrap.hidden = false; dlg.classList.add('wide');
+  document.getElementById('dlgAlt').hidden = true;
+  vid.play().catch(() => {});
+});
+dlg.querySelector('.dlg-close').addEventListener('click', () => dlg.close());
+dlg.addEventListener('click', e => { if (e.target === dlg) dlg.close(); });   // click outside closes
+dlg.addEventListener('close', () => { liFrame.src = 'about:blank'; vid.pause(); });
+
+document.querySelectorAll('[data-copy]').forEach(btn => btn.addEventListener('click', async () => {
+  try {
+    await navigator.clipboard.writeText(document.getElementById(btn.dataset.copy).textContent);
+    btn.textContent = 'Copied';
+  } catch { btn.textContent = 'Select and copy manually'; }
+  setTimeout(() => (btn.textContent = 'Copy BibTeX'), 1800);
+}));
+</script>
+</body>
+</html>
